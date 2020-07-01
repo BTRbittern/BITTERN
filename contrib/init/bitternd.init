@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+#  bitternd The BTR core server.
+#
+#
+# chkconfig: 345 80 20
+# description: bitternd
+# processname: bitternd
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# you can override defaults in /etc/sysconfig/bitternd, see below
+if [ -f /etc/sysconfig/bitternd ]; then
+        . /etc/sysconfig/bitternd
+fi
+
+RETVAL=0
+
+prog=bitternd
+# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/bitternd
+lockfile=${BITCOIND_LOCKFILE-/var/lock/subsys/bitternd}
+
+# bitternd defaults to /usr/bin/bitternd, override with BITCOIND_BIN
+bitcoind=${BITCOIND_BIN-/usr/bin/bitternd}
+
+# bitternd opts default to -disablewallet, override with BITCOIND_OPTS
+bitcoind_opts=${BITCOIND_OPTS}
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $DAEMONOPTS $bitcoind $bitcoind_opts
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
